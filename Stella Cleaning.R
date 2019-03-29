@@ -20,17 +20,20 @@ options(httr_oauth_cache=TRUE)
 setup_twitter_oauth(consumer_key = consumerKey, consumer_secret = consumerSecret,
                     access_token = accessToken, access_secret = accessSecret)
 
+#Scraping replies to Creasy
 tweetstostella <-
   searchTwitter("stellacreasy exclude:retweets", n = 3200)
 tweetstostella_df <- twListToDF(tweetstostella)
 
 tweet_words <- tweetstostella_df %>% select(id, text) %>% unnest_tokens(word,text)
 
+#sorting and simple plot of tweets
 tweet_words %>% count(word, sort = T) %>% slice(1:30) %>%
   ggplot(aes(x = reorder(word,
                          n, function(n)
                            - n), y = n)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 60,
                                                                                                           hjust = 1)) + xlab("") 
+#adding stop words to plotting
 my_stop_words <- stop_words %>% select(-lexicon) %>%
   bind_rows(data.frame(
     word = c(
@@ -59,6 +62,7 @@ my_stop_words <- stop_words %>% select(-lexicon) %>%
       "labour",
     )
   ))
+#secondary plotting after stop words
 tweet_words_interesting <- tweet_words %>% anti_join(my_stop_words)
 
 tweet_words_interesting %>% group_by(word) %>% tally(sort = TRUE) %>% slice(1:25) %>% ggplot(aes(x = reorder(word,
@@ -66,6 +70,7 @@ tweet_words_interesting %>% group_by(word) %>% tally(sort = TRUE) %>% slice(1:25
                                                                                                                - n), y = n)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 60,
                                                                                                                                                                                               hjust = 1)) + xlab("")
 
+#Sentiment analysis x 2 (nrc and bing)
 bing_lex <- get_sentiments("nrc")
 
 fn_sentiment <- tweet_words_interesting %>% left_join(bing_lex)
