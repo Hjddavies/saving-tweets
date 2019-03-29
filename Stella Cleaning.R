@@ -9,6 +9,8 @@ library(scales)
 library(broom)
 library(ggplot2)
 
+
+#define credentials to log in to Twitter API
 consumerKey = "QqstUdQ2yLRUGboueH7wJIsv1"
 consumerSecret = "ykRtbBKSarjpQYRBCUBUHaiuW4FnPz2iDLO2TkcEtO9mocYOTN"
 accessToken = "240583200-1R98JE0NLVS1CzwngMk5zOywJzd4Ia2MMYX7jMF3"
