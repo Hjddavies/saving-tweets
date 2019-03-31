@@ -84,3 +84,5 @@ get_sentiments("nrc") %>%
   filter(sentiment %in% c("positive",
                           "negative")) %>%
   count(sentiment)
+
+#next steps test 
