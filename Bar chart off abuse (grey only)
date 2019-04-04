@@ -1,0 +1,115 @@
+library(stringr)
+library(twitteR)
+library(purrr)
+library(tidytext)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(scales)
+library(broom)
+library(ggplot2)
+library(tidyverse)
+
+
+#define credentials to log in to Twitter API
+consumerKey = "QqstUdQ2yLRUGboueH7wJIsv1"
+consumerSecret = "ykRtbBKSarjpQYRBCUBUHaiuW4FnPz2iDLO2TkcEtO9mocYOTN"
+accessToken = "240583200-1R98JE0NLVS1CzwngMk5zOywJzd4Ia2MMYX7jMF3"
+accessSecret = "SdVrYx1Gdu0lNPBxAw6AkkQBiTcLUHPc6SrPNNPqttKGd"
+options(httr_oauth_cache=TRUE)
+
+setup_twitter_oauth(consumer_key = consumerKey, consumer_secret = consumerSecret,
+                    access_token = accessToken, access_secret = accessSecret)
+
+#Scraping replies to Creasy
+tweetstostella <-
+  searchTwitter("stellacreasy exclude:retweets", n = 3200)
+tweetstostella_df <- twListToDF(tweetstostella)
+
+tweet_words <- tweetstostella_df %>% select(id, text) %>% unnest_tokens(word,text)
+
+#sorting and simple plot of tweets
+word_count <- tweet_words %>% count(word, sort = T) 
+
+wordstheme <- theme(plot.title = element_text(colour = "steelblue", size = 20, hjust = 0.5), 
+                    axis.text.x = element_text(angle = 60, hjust = 1))
+
+
+word_count %>% slice(1:20) %>%
+  ggplot(aes(x = reorder(word, n, function(n) - n), y = n)) + 
+  geom_bar(stat = "identity") + 
+  wordstheme +
+  xlab("words") + 
+  ylab("word count") + 
+  ggtitle("how many times do certain words appear?")
+
+
+  
+#adding stop words to plotting
+my_stop_words <- stop_words %>% select(-lexicon) %>%
+  bind_rows(data.frame(
+    word = c(
+      "https",
+      "t.co",
+      "stellacreasy",
+      "a",
+      "to",
+      "theresa_may",
+      "stella",
+      "10downingstreet",
+      "it's",
+      "mp",
+      "amp",
+      "is",
+      "it",
+      "on",
+      "that",
+      "for",
+      "be",
+      "not",
+      "it's",
+      "jessphillips",
+      "mrjamesbob",
+      "bbcpolitics",
+      "labour"
+    )
+  ))
+#secondary plotting after stop words
+tweet_words_interesting <- tweet_words %>% anti_join(my_stop_words)
+
+tweet_words_interesting %>% group_by(word) %>% tally(sort = TRUE) %>% slice(1:25) %>% 
+  ggplot(aes(x = reorder(word, n, function(n) - n), y = n)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 60,
+                                                           hjust = 1)) + xlab("")
+
+#select rows starting with betray
+betrayal_words <- tweet_words_interesting %>% filter(str_detect(word, "^betray"))
+
+traitor_words <- tweet_words_interesting %>% filter(str_detect(word, "^traito") | str_detect(word, "^treason"))
+
+hypoocrite_words <- tweet_words_interesting %>% filter(str_detect(word, "^hypocr"))
+
+deception_words <- tweet_words_interesting %>% filter(str_detect(word, "^decei"))
+
+liar_words <- tweet_words_interesting %>% filter(str_detect(word, "^liar") | str_detect(word, "^lying"))
+
+abuse_words <- bind_rows(betrayal_words, traitor_words, hypoocrite_words, deception_words, liar_words)
+
+word_count_of_abuse <- data.frame(type_of_abuse = character(), count = integer())
+
+word_count_of_abuse <-rbind(word_count_of_abuse, list(type_of_abuse = "betrayal", count = nrow(betrayal_words)),stringsAsFactors=FALSE) 
+word_count_of_abuse <-rbind(word_count_of_abuse, list(type_of_abuse = "traitor", count = nrow(traitor_words)),stringsAsFactors=FALSE) 
+word_count_of_abuse <-rbind(word_count_of_abuse, list(type_of_abuse = "hypocrite", count = nrow(hypoocrite_words)),stringsAsFactors=FALSE) 
+word_count_of_abuse <-rbind(word_count_of_abuse, list(type_of_abuse = "liar", count = nrow(liar_words)),stringsAsFactors=FALSE) 
+word_count_of_abuse <-rbind(word_count_of_abuse, list(type_of_abuse = "deception", count = nrow(deception_words)),stringsAsFactors=FALSE) 
+
+wordstheme <- theme(plot.title = element_text(colour = "steelblue", size = 20, hjust = 0.5), 
+                    axis.text.x = element_text(angle = 60, hjust = 1))
+
+
+word_count_of_abuse %>%
+  ggplot(aes(x = reorder(type_of_abuse, count, function(n) - n), y = count)) + 
+  geom_bar(stat = "identity") + 
+  wordstheme +
+  xlab("abuse") + 
+  ylab("word count") + 
+  ggtitle("how many times do some sorts of abuse occur?")
