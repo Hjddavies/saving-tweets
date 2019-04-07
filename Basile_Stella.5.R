@@ -171,7 +171,7 @@ abuse_words %>% group_by(word) %>% tally(sort = TRUE) %>% slice(1:20) %>%
     - n), y = n)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 60,
                                                                                    hjust = 1)) + xlab("")
 
-#various other experiments with the binded rows give us various cosmetic changes (see Rplot5i, ii, iii, iv) then we do this:
+#various other experiments with the binded rows give us various changes of colours, frames etc. (see Rplot5i, ii, iii, iv) then we do this:
 
 #http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/
 #plus stackoverflow.com to remove legend
